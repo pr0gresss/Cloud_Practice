@@ -4,6 +4,8 @@ from sqlalchemy import select
 from contextlib import asynccontextmanager
 import logging
 import time
+import threading
+from consumer import start_consumer
 
 from models import Feedback
 from schemas import FeedbackCreate, FeedbackOut
@@ -18,6 +20,11 @@ logger = logging.getLogger("feedback-service")
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     logger.info("Database initialized")
+
+    thread = threading.Thread(target=start_consumer, daemon=True)
+    thread.start()
+
+    logger.info("Consumer started")
     yield
     logger.info("Service stopped")
 

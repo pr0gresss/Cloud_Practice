@@ -4,8 +4,9 @@ from sqlalchemy import select
 from contextlib import asynccontextmanager
 import logging
 
+from service_bus import send_feedback_message
 from models import Portfolio
-from schemas import PortfolioCreate, PortfolioUpdate, PortfolioOut
+from schemas import FeedbackCreate, PortfolioCreate, PortfolioUpdate, PortfolioOut
 from db import get_db, engine, Base
 
 # Logging
@@ -88,3 +89,17 @@ def delete_portfolio(id: int, db: Session = Depends(get_db)):
 
     logger.info(f"Deleted portfolio {id}")
     return {"message": "Deleted successfully"}
+
+@app.post("/portfolios/{id}/feedback")
+def send_feedback(id: int, data: FeedbackCreate):
+
+    payload = {
+        "portfolioId": id,
+        "content": data.content
+    }
+
+    send_feedback_message(payload)
+
+    return {
+        "message": "Feedback queued"
+    }
